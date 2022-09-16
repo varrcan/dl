@@ -42,8 +42,6 @@ jobs:
             echo "----> Building for: ${target}"
             GOOS=${os} GOARCH=${arch} CGO_ENABLED=0 go build -o "${output}"
           done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Compress files
         run: tar cvfz "${{ env.binary_name }}"-"${{ env.release_tag }}".tar.gz config-files bin
