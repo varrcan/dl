@@ -20,6 +20,6 @@ jobs:
           BINARY_NAME=$(basename "${GITHUB_REPOSITORY}")
           RELEASE_TAG=$(basename "${GITHUB_REF}")
           RELEASE_ASSET_NAME=${BINARY_NAME}-${RELEASE_TAG}
-          hub release create -a "${GITHUB_WORKSPACE}"/"${RELEASE_ASSET_NAME}".tar.gz "${GITHUB_REF}"
+          hub release create -a "${GITHUB_WORKSPACE}"/"${RELEASE_ASSET_NAME}".tar.gz -m "${GITHUB_SHA}" "${GITHUB_REF}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
