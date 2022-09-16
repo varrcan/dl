@@ -26,10 +26,6 @@ jobs:
           check-latest: true
           cache: true
 
-#      - name: Install gox
-#        run: |
-#          go install github.com/mitchellh/gox@latest
-
       - name: Loading dependencies
         run: go mod download
 
@@ -46,7 +42,6 @@ jobs:
             echo "----> Building for: ${target}"
             GOOS=${os} GOARCH=${arch} CGO_ENABLED=0 go build -o "${output}"
           done
-#          gox -osarch="${{ env.targets }}" -output="${{ env.binary_path }}/${{ env.binary_name }}_{{.OS}}_{{.Arch}}"
 
       - name: Compress files
         run: tar cvfz "${{ env.binary_name }}"-"${{ env.release_tag }}".tar.gz config-files bin
