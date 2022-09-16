@@ -11,7 +11,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Build binary
+        uses: docker://ghcr.io/local-deploy/build-release:1.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Make release
-        uses: docker://ghcr.io/local-deploy/build-release:latest
+        run: |
+          BINARY_NAME=$(basename "${GITHUB_REPOSITORY}")
+          RELEASE_TAG=$(basename "${GITHUB_REF}")
+          RELEASE_ASSET_NAME=${BINARY_NAME}-${RELEASE_TAG}
+          hub release create -a "${GITHUB_WORKSPACE}"/"${RELEASE_ASSET_NAME}".tar.gz RELEASE_TAG
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
