@@ -14,7 +14,6 @@ jobs:
           echo binary_path="${GITHUB_WORKSPACE}/bin" >> $GITHUB_ENV
           echo binary_name=$(basename "${GITHUB_REPOSITORY}") >> $GITHUB_ENV
           echo release_tag=$(basename "${GITHUB_REF}") >> $GITHUB_ENV
-          echo release_asset_name="${{ env.binary_name }}"-"${{ env.release_tag }}" >> $GITHUB_ENV
           echo targets="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64" >> $GITHUB_ENV
 
       - name: Checkout
@@ -40,10 +39,9 @@ jobs:
           gox -osarch="${{ env.targets }}" -output="${{ env.binary_path }}/${{ env.binary_name }}_{{.OS}}_{{.Arch}}"
 
       - name: Compress files
-        run: |
-          tar cvfz "${{ env.release_asset_name }}".tar.gz config-files bin
+        run: tar cvfz "${{ env.binary_name }}"-"${{ env.release_tag }}".tar.gz config-files bin
 
       - name: Make release
-        run: hub release create -a "${GITHUB_WORKSPACE}"/"${{ env.release_asset_name }}".tar.gz -m "${{ env.release_tag }}" "${GITHUB_REF}"
+        run: hub release create -a "${GITHUB_WORKSPACE}"/"${{ env.binary_name }}"-"${{ env.release_tag }}".tar.gz -m "${{ env.release_tag }}" "${GITHUB_REF}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
