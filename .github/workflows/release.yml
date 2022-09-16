@@ -9,6 +9,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Set env value
+        run: |
+          echo binary_path="${GITHUB_WORKSPACE}/bin" >> $GITHUB_ENV
+          echo binary_name=$(basename "${GITHUB_REPOSITORY}") >> $GITHUB_ENV
+          echo release_tag=$(basename "${GITHUB_REF}") >> $GITHUB_ENV
+          echo release_asset_name="${{ env.binary_name }}"-"${{ env.release_tag }}" >> $GITHUB_ENV
+          echo targets="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -22,38 +30,20 @@ jobs:
       - name: Install gox
         run: |
           go install github.com/mitchellh/gox@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Loading dependencies
+        run: go mod download
 
       - name: Build binary
-#        uses: docker://ghcr.io/local-deploy/build-release:1.1.2
         run: |
-          BINARY_PATH="${GITHUB_WORKSPACE}/bin"
-          BINARY_NAME=$(basename "${GITHUB_REPOSITORY}")
-          RELEASE_TAG=$(basename "${GITHUB_REF}")
-          RELEASE_ASSET_NAME=${BINARY_NAME}-${RELEASE_TAG}
-          TARGETS="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64"
+          mkdir -p "${{ env.binary_path }}"
+          gox -osarch="${{ env.targets }}" -output="${{ env.binary_path }}/${{ env.binary_name }}_{{.OS}}_{{.Arch}}"
 
-          echo "----> Setting up repository"
-          mkdir -p "${BINARY_PATH}"
+      - name: Compress files
+        run: |
+          tar cvfz "${{ env.release_asset_name }}".tar.gz config-files bin
 
-          echo "----> Loading dependencies"
-          go mod download
-
-          echo "----> Building"
-          gox -osarch="${TARGETS}" -output="${BINARY_PATH}/${BINARY_NAME}_{{.OS}}_{{.Arch}}"
-
-          echo "----> Compress files"
-          tar cvfz "${RELEASE_ASSET_NAME}"."${GITHUB_REF}"tar.gz config-files bin
-
-          echo "----> Build is complete"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Make release
-        run: |
-          BINARY_NAME=$(basename "${GITHUB_REPOSITORY}")
-          RELEASE_TAG=$(basename "${GITHUB_REF}")
-          RELEASE_ASSET_NAME=${BINARY_NAME}-${RELEASE_TAG}
-          hub release create -a "${GITHUB_WORKSPACE}"/"${RELEASE_ASSET_NAME}".tar.gz -m "${RELEASE_TAG}" "${GITHUB_REF}"
+        run: hub release create -a "${GITHUB_WORKSPACE}"/"${{ env.release_asset_name }}".tar.gz -m "${{ env.release_tag }}" "${GITHUB_REF}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
