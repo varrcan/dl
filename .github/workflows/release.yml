@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Set env value
+      - name: Set up env
         run: |
           echo binary_path="${GITHUB_WORKSPACE}/bin" >> $GITHUB_ENV
           echo binary_name=$(basename "${GITHUB_REPOSITORY}") >> $GITHUB_ENV
@@ -19,16 +19,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Setup Go
+      - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: '1.18.1'
           check-latest: true
           cache: true
 
-      - name: Install gox
-        run: |
-          go install github.com/mitchellh/gox@latest
+#      - name: Install gox
+#        run: |
+#          go install github.com/mitchellh/gox@latest
 
       - name: Loading dependencies
         run: go mod download
@@ -36,7 +36,17 @@ jobs:
       - name: Build binary
         run: |
           mkdir -p "${{ env.binary_path }}"
-          gox -osarch="${{ env.targets }}" -output="${{ env.binary_path }}/${{ env.binary_name }}_{{.OS}}_{{.Arch}}"
+          TARGETS=("linux/amd64" "darwin/amd64")
+
+          for target in "${TARGETS[@]}"; do
+            os="$(echo "${target}" | cut -d '/' -f1)"
+            arch="$(echo "${target}" | cut -d '/' -f2)"
+            output="${{ env.binary_path }}/${{ env.binary_name }}_${os}_${arch}"
+
+            echo "----> Building for: ${target}"
+            GOOS=${os} GOARCH=${arch} CGO_ENABLED=0 go build -o "${output}"
+          done
+#          gox -osarch="${{ env.targets }}" -output="${{ env.binary_path }}/${{ env.binary_name }}_{{.OS}}_{{.Arch}}"
 
       - name: Compress files
         run: tar cvfz "${{ env.binary_name }}"-"${{ env.release_tag }}".tar.gz config-files bin
