@@ -22,7 +22,6 @@ jobs:
       - name: Install gox
         run: |
           go install github.com/mitchellh/gox@latest
-          gox -v
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
