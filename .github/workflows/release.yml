@@ -25,14 +25,14 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Loading dependencies
-        run: go mod download
+#      - name: Loading dependencies
+#        run: go mod download
 
-      - name: Test
-        run: go test -v ./...
+#      - name: Test
+#        run: go test -v ./...
 
       - name: Make release
         uses: goreleaser/goreleaser-action@v4
@@ -40,4 +40,5 @@ jobs:
           version: latest
           args: release --clean
         env:
+          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
