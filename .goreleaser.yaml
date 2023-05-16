@@ -14,10 +14,14 @@ builds:
       - "7"
     ignore:
       - goamd64: v4
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X main.builtBy=goreleaser -X main.treeState={{ .IsGitDirty }}
 
 archives:
   - format: tar.gz
-    # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -26,7 +30,7 @@ archives:
       {{- if .Arm }}v{{ .Arm }}{{ end }}
 
 nfpms:
-  - file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+  - file_name_template: "{{ .ConventionalFileName }}"
     id: packages
     homepage: https://web-dl.pw
     description: |-
@@ -43,10 +47,20 @@ nfpms:
         - statically-linked-binary
         - changelog-file-missing-in-native-package
 
+publishers:
+  - name: fury.io
+    ids:
+      - packages
+    env:
+      - 'FURY_TOKEN={{ .Env.FURY_TOKEN }}'
+    cmd: ./.github/scripts/fury-upload.sh {{ .ArtifactName }}
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   use: github
