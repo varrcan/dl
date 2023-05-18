@@ -6,10 +6,10 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-#      - darwin
+      - darwin
     goarch:
       - amd64
-#      - arm64
+      - arm64
     goarm:
       - "7"
     ignore:
@@ -32,11 +32,11 @@ archives:
 nfpms:
   - file_name_template: "{{ .ConventionalFileName }}"
     id: packages
-    homepage: https://web-dl.pw
+    homepage: https://local-deploy.github.io
     description: |-
       Deploy Local — site deployment assistant locally.
       A convenient wrapper over docker-compose, which simplifies the local deployment of the project.
-    maintainer: Sergey Voloshin <support@web-dl.pw>
+    maintainer: Sergey Voloshin <dl@varme.pw>
     license: MIT
     vendor: DeployLocal
     section: utils
