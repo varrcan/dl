@@ -144,7 +144,7 @@ func selfUpdateRun(ctx context.Context) (string, error) {
 }
 
 func downloadRelease(filepath string, url string) error {
-	resp, err := http.Get(url)
+	resp, err := http.Get(url) //nolint:gosec
 	if err != nil {
 		return err
 	}

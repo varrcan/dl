@@ -2,7 +2,8 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - env:
+  - id: "linux"
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -15,22 +16,27 @@ builds:
     ignore:
       - goamd64: v4
     mod_timestamp: "{{ .CommitTimestamp }}"
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X main.builtBy=goreleaser -X main.treeState={{ .IsGitDirty }}
+
+#universal_binaries:
+#  - replace: true
 
 archives:
   - format: tar.gz
     name_template: >-
-      {{ .ProjectName }}_
-      {{- title .Os }}_
-      {{- if eq .Arch "amd64" }}x86_64
-      {{- else }}{{ .Arch }}{{ end }}
-      {{- if .Arm }}v{{ .Arm }}{{ end }}
+      {{ .ProjectName }}-
+      {{- .Version }}-
+      {{- tolower .Os }}-
+      {{- .Arch }}
+    rlcp: true
+    files:
+      - "!*"
 
 nfpms:
-  - file_name_template: "{{ .ConventionalFileName }}"
+  - file_name_template: >-
+      {{ .ProjectName }}-
+      {{- .Version }}-
+      {{- tolower .Os }}-
+      {{- .Arch }}
     id: packages
     homepage: https://local-deploy.github.io
     description: |-
@@ -42,6 +48,23 @@ nfpms:
     section: utils
     formats:
       - deb
+    #  - rpm
+    #  - archlinux
+    dependencies:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    scripts:
+      preinstall: "./.github/scripts/packages/preinstall.sh"
+    contents:
+      - src: config-files/
+        dst: /etc/dl/config-files
+      - src: .github/scripts/packages/completions/zsh
+        dst: /usr/share/zsh/vendor-completions/_dl
+      - src: .github/scripts/packages/completions/bash
+        dst: /usr/share/bash-completion/completions/dl
     deb:
       lintian_overrides:
         - statically-linked-binary
