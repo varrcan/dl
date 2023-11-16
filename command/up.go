@@ -10,15 +10,14 @@ import (
 	"strings"
 
 	"github.com/docker/compose/v2/pkg/progress"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
 	"github.com/local-deploy/dl/helper"
 	"github.com/local-deploy/dl/project"
 	"github.com/local-deploy/dl/utils"
+	"github.com/local-deploy/dl/utils/docker"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func upCommand() *cobra.Command {
@@ -44,16 +43,13 @@ func upRun() {
 	}
 
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, err := docker.NewClient()
 	if err != nil {
-		pterm.Fatal.Printfln("Failed to connect to socket")
+		pterm.FgRed.Printfln("Failed to connect to socket")
 		return
 	}
 
-	containerFilter := filters.NewArgs(filters.Arg("name", "traefik"))
-	traefikExists, err := cli.ContainerList(ctx, types.ContainerListOptions{Filters: containerFilter})
-
-	if len(traefikExists) == 0 {
+	if !cli.IsServiceRunning(ctx) {
 		err := startLocalServices()
 		if err != nil {
 			pterm.FgRed.Println(err)
@@ -62,6 +58,11 @@ func upRun() {
 	}
 
 	pterm.FgGreen.Printfln("Starting project...")
+
+	if viper.GetBool("ca") {
+		pterm.FgGreen.Printfln("SSL certificate enabled")
+		project.CreateCert()
+	}
 
 	bin, option := helper.GetCompose()
 	Args := []string{bin}
@@ -113,7 +114,7 @@ func startLocalServices() error {
 		return nil
 	}
 	//goland:noinspection GoErrorStringFormat
-	return errors.New("Start local services first: dl service up")
+	return errors.New("start local services first: dl service up")
 }
 
 // showProjectInfo Display project links
@@ -121,10 +122,16 @@ func showProjectInfo() {
 	l := project.Env.GetString("LOCAL_DOMAIN")
 	n := project.Env.GetString("NIP_DOMAIN")
 
+	schema := "http"
+
+	if viper.GetBool("ca") {
+		schema = "https"
+	}
+
 	pterm.FgCyan.Println()
 	panels := pterm.Panels{
 		{{Data: pterm.FgYellow.Sprintf("nip.io\nlocal")},
-			{Data: pterm.FgYellow.Sprintf("http://%s/\nhttp://%s/", n, l)}},
+			{Data: pterm.FgYellow.Sprintf(schema+"://%s/\n"+schema+"://%s/", n, l)}},
 	}
 
 	_ = pterm.DefaultPanel.WithPanels(panels).WithPadding(5).Render()

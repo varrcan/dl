@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
@@ -22,6 +21,7 @@ var (
 	database      bool
 	files         bool
 	override      []string
+	tables        []string
 	pullWaitGroup sync.WaitGroup
 	sshClient     *client.Client
 )
@@ -41,12 +41,13 @@ Laravel: only the database is downloaded`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return deployRun()
 		},
-		Example:   "dl deploy\ndl deploy -d\ndl deploy -f -o bitrix,upload",
+		Example:   "dl deploy\ndl deploy -d\ndl deploy -d -t b_user,b_file\ndl deploy -f\ndl deploy -f -o bitrix,upload",
 		ValidArgs: []string{"--database", "--files", "--override"},
 	}
 	cmd.Flags().BoolVarP(&database, "database", "d", false, "Dump only database from server")
 	cmd.Flags().BoolVarP(&files, "files", "f", false, "Download only files from server")
 	cmd.Flags().StringSliceVarP(&override, "override", "o", nil, "Override downloaded files (comma separated values)")
+	cmd.Flags().StringSliceVarP(&tables, "tables", "t", nil, "Dump only specified tables (comma separated values)")
 	return cmd
 }
 
@@ -85,7 +86,7 @@ func deployService(ctx context.Context) error {
 	if len(project.Env.GetString("TELEPORT")) > 0 {
 		sshClient = &client.Client{Config: &client.Config{FwType: "bitrix"}}
 		fmt.Println("Deploy using Teleport")
-		return teleport.DeployTeleport(ctx, database, files, override)
+		return teleport.DeployTeleport(ctx, database, files, override, tables)
 	}
 
 	sshClient, err = getClient()
@@ -122,7 +123,7 @@ func deployService(ctx context.Context) error {
 		err = docker.UpDbContainer()
 		if err != nil {
 			w.Event(progress.ErrorMessageEvent("Import failed", fmt.Sprint(err)))
-			os.Exit(1)
+			return err
 		}
 		pullWaitGroup.Add(1)
 		go startDump(ctx, sshClient)
@@ -155,7 +156,7 @@ func startFiles(ctx context.Context, c *client.Client) {
 
 func startDump(ctx context.Context, c *client.Client) {
 	defer pullWaitGroup.Done()
-	project.DumpDb(ctx, c)
+	project.DumpDb(ctx, c, tables)
 }
 
 func detectFw() (string, error) {

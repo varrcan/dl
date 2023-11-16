@@ -22,12 +22,12 @@ var phpImagesVersion = map[string]string{
 	"7.3-fpm":    "1.0.3",
 	"7.4-apache": "1.0.6",
 	"7.4-fpm":    "1.0.3",
-	"8.0-apache": "1.0.5",
-	"8.0-fpm":    "1.0.4",
-	"8.1-apache": "1.0.4",
-	"8.1-fpm":    "1.0.3",
-	"8.2-apache": "1.0.1",
-	"8.2-fpm":    "1.0.1",
+	"8.0-apache": "1.0.6",
+	"8.0-fpm":    "1.0.5",
+	"8.1-apache": "1.0.6",
+	"8.1-fpm":    "1.0.5",
+	"8.2-apache": "1.0.3",
+	"8.2-fpm":    "1.0.3",
 }
 
 // LoadEnv Get variables from .env file
@@ -74,7 +74,7 @@ func setDefaultEnv() {
 	Env.SetDefault("NETWORK_NAME", res)
 
 	confDir := helper.TemplateDir()
-	Env.SetDefault("NGINX_CONF", filepath.Join(confDir, "config-files", "default.conf.template"))
+	Env.SetDefault("NGINX_CONF", filepath.Join(confDir, "default.conf.template"))
 
 	customConfig := Env.GetString("NGINX_CONF")
 	if len(customConfig) > 0 {
@@ -108,11 +108,12 @@ func setComposeFiles() {
 	templateDir := helper.TemplateDir()
 
 	images := map[string]string{
-		"mysql":     templateDir + "/config-files/docker-compose-mysql.yaml",
-		"fpm":       templateDir + "/config-files/docker-compose-fpm.yaml",
-		"apache":    templateDir + "/config-files/docker-compose-apache.yaml",
-		"redis":     templateDir + "/config-files/docker-compose-redis.yaml",
-		"memcached": templateDir + "/config-files/docker-compose-memcached.yaml",
+		"mysql":     templateDir + "/docker-compose-mysql.yaml",
+		"pgsql":     templateDir + "/docker-compose-pgsql.yaml",
+		"fpm":       templateDir + "/docker-compose-fpm.yaml",
+		"apache":    templateDir + "/docker-compose-apache.yaml",
+		"redis":     templateDir + "/docker-compose-redis.yaml",
+		"memcached": templateDir + "/docker-compose-memcached.yaml",
 	}
 
 	phpVersion := Env.GetString("PHP_VERSION")
@@ -127,6 +128,9 @@ func setComposeFiles() {
 
 	if Env.GetFloat64("MYSQL_VERSION") > 0 {
 		files = append(files, images["mysql"])
+	}
+	if Env.GetFloat64("POSTGRES_VERSION") > 0 {
+		files = append(files, images["pgsql"])
 	}
 	if Env.GetBool("REDIS") {
 		files = append(files, images["redis"])

@@ -6,6 +6,7 @@ import (
 	"github.com/docker/compose/v2/pkg/progress"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -33,6 +34,8 @@ func Execute() {
 	rootCmd.DisableAutoGenTag = true
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "Show more output")
 
+	rootCmd.Version = viper.GetString("version")
+
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		if debug {
 			logrus.SetLevel(logrus.DebugLevel)
@@ -43,6 +46,7 @@ func Execute() {
 	rootCmd.AddCommand(
 		envCommand(),
 		psCommand(),
+		certCommand(),
 		bashCommand(),
 		execCommand(),
 		completionCommand(),
@@ -54,6 +58,7 @@ func Execute() {
 		recreateCommand(),
 		serviceCommand(),
 		selfUpdateCommand(),
+		statusCommand(),
 		templateCreateCommand(),
 		versionCommand(),
 	)
