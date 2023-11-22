@@ -2,17 +2,17 @@ module github.com/local-deploy/dl
 
 go 1.21
 
-toolchain go1.21.0
+toolchain go1.21.4
 
 require (
-	github.com/compose-spec/compose-go v1.20.1
+	github.com/compose-spec/compose-go v1.20.2
 	github.com/docker/cli v24.0.7+incompatible
-	github.com/docker/compose/v2 v2.23.0
+	github.com/docker/compose/v2 v2.23.2
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/google/go-github/v41 v41.0.0
 	github.com/m7shapan/njson v1.0.8
 	github.com/pkg/sftp v1.13.6
-	github.com/pterm/pterm v0.12.70
+	github.com/pterm/pterm v0.12.71
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
@@ -33,7 +33,6 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Microsoft/hcsshim v0.11.1 // indirect
-	github.com/adrg/xdg v0.4.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.17.6 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.18.16 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.13.16 // indirect
@@ -115,7 +114,7 @@ require (
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/moby/buildkit v0.12.2 // indirect
+	github.com/moby/buildkit v0.12.3 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
