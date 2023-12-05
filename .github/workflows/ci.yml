@@ -17,10 +17,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - { runner: macos-latest,  os: darwin,  arch: amd64, cache: "~/Library/Caches/go-build" }
-          - { runner: macos-latest,  os: darwin,  arch: arm64, cache: "~/Library/Caches/go-build" }
-          - { runner: ubuntu-latest, os: linux,   arch: amd64, cache: "~/.cache/go-build" }
-          - { runner: ubuntu-latest, os: linux,   arch: arm64, cache: "~/.cache/go-build" }
+          - { runner: macos-latest,  os: darwin,  arch: amd64 }
+          - { runner: macos-latest,  os: darwin,  arch: arm64 }
+          - { runner: ubuntu-latest, os: linux,   arch: amd64 }
+          - { runner: ubuntu-latest, os: linux,   arch: arm64 }
     environment: production
     env:
       CGO: 0
@@ -37,16 +37,6 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-#      - name: Enable cache
-#        uses: actions/cache@v3
-#        with:
-#          path: |
-#            "${{ matrix.cache }}"
-#            ~/go/pkg/mod
-#          key: ${{ matrix.os }}-${{ matrix.arch }}-go-${{ hashFiles('**/go.sum') }}
-#          restore-keys: |
-#            ${{ matrix.os }}-${{ matrix.arch }}-go-
-
       - name: Set CGO
         if: ${{ matrix.os == 'darwin' }}
         run: echo "CGO=1" >> $GITHUB_ENV
@@ -62,7 +52,7 @@ jobs:
       - name: Build
         run: |
           mkdir -p "$GITHUB_WORKSPACE/dist/${{ matrix.os }}_${{ matrix.arch }}"
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags="-s -w -X 'main.version=${{ steps.version.outputs.tag }}'" -o "$GITHUB_WORKSPACE"/dist/${{ matrix.os }}_${{ matrix.arch }}/dl .
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags "-s -w -X 'main.version=${{ steps.version.outputs.tag }}'" -o "$GITHUB_WORKSPACE"/dist/${{ matrix.os }}_${{ matrix.arch }}/dl .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
