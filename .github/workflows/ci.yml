@@ -64,7 +64,7 @@ jobs:
       - name: Build
         run: |
           mkdir -p "$GITHUB_WORKSPACE/dist/${{ matrix.os }}_${{ matrix.arch }}"
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} ${{ env.CGO }} go build -ldflags="-s -w -X 'main.version=${{ steps.version.outputs.tag }}'" -o "$GITHUB_WORKSPACE"/dist/${{ matrix.os }}_${{ matrix.arch }}/dl .
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags="-s -w -X 'main.version=${{ steps.version.outputs.tag }}'" -o "$GITHUB_WORKSPACE"/dist/${{ matrix.os }}_${{ matrix.arch }}/dl .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
