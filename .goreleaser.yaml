@@ -15,6 +15,17 @@ builds:
     ignore:
       - goamd64: v4
     mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: "darwin"
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
 
 release:
   prerelease: auto
