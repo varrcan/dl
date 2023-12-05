@@ -53,8 +53,8 @@ jobs:
 
       - name: Build
         run: |
-          mkdir -p ${{GITHUB_WORKSPACE}}/dist
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o ${{GITHUB_WORKSPACE}}/dist/${{ matrix.os }}_${{ matrix.arch }}/dl ./...
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o $GITHUB_WORKSPACE/dist/${{ matrix.os }}_${{ matrix.arch }}/dl ./...
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
