@@ -22,6 +22,8 @@ jobs:
           - { runner: ubuntu-latest, os: linux,   arch: amd64, cache: "~/.cache/go-build" }
           - { runner: ubuntu-latest, os: linux,   arch: arm64, cache: "~/.cache/go-build" }
     environment: production
+    env:
+      CGO: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -34,21 +36,18 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-          cache: true
 
-      - name: Enable cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            "${{ matrix.cache }}"
-            ~/go/pkg/mod
-          key: ${{ matrix.os }}-${{ matrix.arch }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ matrix.os }}-${{ matrix.arch }}-go-
+#      - name: Enable cache
+#        uses: actions/cache@v3
+#        with:
+#          path: |
+#            "${{ matrix.cache }}"
+#            ~/go/pkg/mod
+#          key: ${{ matrix.os }}-${{ matrix.arch }}-go-${{ hashFiles('**/go.sum') }}
+#          restore-keys: |
+#            ${{ matrix.os }}-${{ matrix.arch }}-go-
 
       - name: Set CGO
-        env:
-          CGO: 0
         if: ${{ matrix.os == 'darwin' }}
         run: echo "CGO=1" >> $GITHUB_ENV
 
