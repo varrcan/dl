@@ -1,13 +1,22 @@
 name: Build and release
 
-on:
-  push:
-    tags:
-      - "*"
+#on:
+#  push:
+#    tags:
+#      - "*"
+
+on: push
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - { runner: macos-latest,  os: darwin,  arch: amd64, tags: netcgo }
+          - { runner: macos-latest,  os: darwin,  arch: arm64, tags: netcgo }
+          - { runner: ubuntu-latest, os: linux,   arch: amd64, env: CGO_ENABLED=0 }
+          - { runner: ubuntu-latest, os: linux,   arch: arm64, env: CGO_ENABLED=0 }
     environment: production
     steps:
       - name: Checkout
@@ -22,19 +31,4 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
-
-      #      - name: Loading dependencies
-      #        run: go mod download
-      #
-      #      - name: Test
-      #        run: go test -v ./...
-
-      - name: Make release
-        uses: goreleaser/goreleaser-action@v4
-        with:
-          version: latest
-          args: release --clean
-        env:
-          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
-          AUR_KEY: ${{ secrets.AUR_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: go version
