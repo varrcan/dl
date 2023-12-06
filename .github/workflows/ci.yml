@@ -12,9 +12,24 @@ concurrency:
 on: push
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.branch.outputs.name }}
+      version: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Extract branch name
+        id: branch
+        run: echo "name=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> "$GITHUB_OUTPUT"
+      - name: Extract version
+        id: version
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
+
   build:
     runs-on: ${{ matrix.runner }}
     name: build ${{ matrix.os }}/${{ matrix.arch }}
+    needs:
+      - prepare
     strategy:
       matrix:
         include:
@@ -42,26 +57,17 @@ jobs:
         if: ${{ matrix.os == 'darwin' }}
         run: echo "CGO=1" >> $GITHUB_ENV
 
-      - name: Extract branch name
-        id: branch
-        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-
-      - name: Extract version
-        id: version
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
-
       - name: Build
         run: |
           mkdir -p "$GITHUB_WORKSPACE/dist/${{ matrix.os }}_${{ matrix.arch }}"
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags "-s -w -X 'main.version=${{ steps.version.outputs.tag }}'" -o "$GITHUB_WORKSPACE"/dist/dl .
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags "-s -w -X 'main.version=${{ needs.prepare.outputs.version }}'" -o "$GITHUB_WORKSPACE"/dist/dl .
 
       - name: Create artifact
-        run: cd "$GITHUB_WORKSPACE"/dist/ && tar -czvf dl-${{ steps.version.outputs.tag }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz dl
+        run: cd "$GITHUB_WORKSPACE"/dist/ && tar -czvf dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz dl
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: binary-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/dl-${{ steps.version.outputs.tag }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          path: dist/dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
           retention-days: 1
 
