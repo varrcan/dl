@@ -46,13 +46,9 @@ jobs:
         id: branch
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
 
-#      - name: Extract version
-#        id: version
-#        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
-
       - name: Extract version
-        uses: actions-ecosystem/action-get-latest-tag@v1
         id: version
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Build
         run: |
