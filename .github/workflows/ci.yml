@@ -14,6 +14,7 @@ on: push
 jobs:
   build:
     runs-on: ${{ matrix.runner }}
+    name: build ${{ matrix.os }}/${{ matrix.arch }}
     strategy:
       matrix:
         include:
@@ -45,18 +46,26 @@ jobs:
         id: branch
         run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
 
+#      - name: Extract version
+#        id: version
+#        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+
       - name: Extract version
+        uses: actions-ecosystem/action-get-latest-tag@v1
         id: version
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Build
         run: |
           mkdir -p "$GITHUB_WORKSPACE/dist/${{ matrix.os }}_${{ matrix.arch }}"
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags "-s -w -X 'main.version=${{ steps.version.outputs.tag }}'" -o "$GITHUB_WORKSPACE"/dist/${{ matrix.os }}_${{ matrix.arch }}/dl .
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags "-s -w -X 'main.version=${{ steps.version.outputs.tag }}'" -o "$GITHUB_WORKSPACE"/dist/dl .
+
+      - name: Create artifact
+        run: cd "$GITHUB_WORKSPACE"/dist/ && tar -czvf dl-${{ steps.version.outputs.tag }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz dl
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: binary-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist
+          path: dist/dl-${{ steps.version.outputs.tag }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          retention-days: 1
 
