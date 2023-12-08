@@ -1,0 +1,115 @@
+name: Build and release
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    tags:
+      - "*"
+
+#on: push
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.branch.outputs.name }}
+      version: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Extract branch name
+        id: branch
+        run: echo "name=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> "$GITHUB_OUTPUT"
+      - name: Extract version
+        id: version
+        run: echo "tag=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
+      - name: Show branch
+        run: echo ${{ steps.branch.outputs.name }}
+      - name: Show version
+        run: echo ${{ steps.version.outputs.tag }}
+
+  build:
+    runs-on: ${{ matrix.runner }}
+    name: build ${{ matrix.os }}/${{ matrix.arch }}
+    needs:
+      - prepare
+    strategy:
+      matrix:
+        include:
+#          - { runner: macos-latest,  os: darwin,  arch: amd64 }
+#          - { runner: macos-latest,  os: darwin,  arch: arm64 }
+#          - { runner: ubuntu-latest, os: linux,   arch: amd64 }
+          - { runner: ubuntu-latest, os: linux,   arch: arm64 }
+    environment: production
+    env:
+      CGO: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - run: git fetch --force --tags
+
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Set CGO
+        if: ${{ matrix.os == 'darwin' }}
+        run: echo "CGO=1" >> $GITHUB_ENV
+
+      - name: Build
+        run: |
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags "-s -w -X 'main.version=${{ needs.prepare.outputs.version }}'" -o "$GITHUB_WORKSPACE"/dist/dl .
+
+      - name: Create artifact
+        run: cd "$GITHUB_WORKSPACE"/dist/ && tar -czvf dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz dl
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: dist/dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          retention-days: 1
+
+  checksum:
+    name: Create checksum
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+      - name: Generate checksum
+        uses: jmgilman/actions-generate-checksum@v1
+        with:
+          patterns: |
+            *.tar.gz
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: checksum.txt
+          retention-days: 1
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs:
+      - checksum
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: artifact
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          files: |
+            checksum.txt
+            *.tar.gz
+

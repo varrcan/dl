@@ -7,7 +7,6 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-      - darwin
     goarch:
       - amd64
       - arm64
@@ -16,6 +15,20 @@ builds:
     ignore:
       - goamd64: v4
     mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: "darwin"
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+release:
+  prerelease: auto
 
 #universal_binaries:
 #  - replace: true
@@ -87,6 +100,7 @@ publishers:
     env:
       - 'FURY_TOKEN={{ .Env.FURY_TOKEN }}'
     cmd: ./.github/scripts/fury-upload.sh {{ .ArtifactName }}
+    disable: "{{ if .Prerelease }}true{{ end }}"
 
 aurs:
   - homepage: https://local-deploy.github.io
@@ -105,6 +119,7 @@ aurs:
     commit_author:
       name: dlbot
       email: dl@varme.pw
+    skip_upload: auto
 
 checksum:
   name_template: 'checksums.txt'
