@@ -102,6 +102,24 @@ jobs:
     needs:
       - checksum
     steps:
+      - name: Changelog
+        uses: ardalanamini/auto-changelog@v4
+        id: changelog
+        with:
+          github-token: ${{ github.token }}
+          commit-types: |
+            feat: New Features
+            fix: Bug Fixes
+            build: Build process updates
+            perf: Performance Improvements
+            docs: Documentation updates
+            test: Tests
+            refactor: Refactors
+            chore: Chores
+            ci: CI
+            style: Code Style
+            revert: Reverts
+          default-commit-type: Other Changes
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
@@ -109,7 +127,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          generate_release_notes: true
+          body_path: ${{ steps.changelog.outputs.changelog }}
           files: |
             checksum.txt
             *.tar.gz
