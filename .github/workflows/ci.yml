@@ -120,6 +120,8 @@ jobs:
             style: Code Style
             revert: Reverts
           default-commit-type: Other Changes
+      - name: Save changelog
+        run: echo ${{ steps.changelog.outputs.changelog }} > ${{ github.workspace }}-CHANGELOG.txt
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
@@ -127,7 +129,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: ${{ steps.changelog.outputs.changelog }}
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
           files: |
             checksum.txt
             *.tar.gz
