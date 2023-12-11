@@ -111,7 +111,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: "$GITHUB_WORKSPACE"/CHANGELOG.md
+          body_path: ${{ github.workspace }}/CHANGELOG.md
           files: |
             checksum.txt
             *.tar.gz
