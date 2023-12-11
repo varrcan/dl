@@ -103,25 +103,7 @@ jobs:
       - checksum
     steps:
       - name: Changelog
-        uses: ardalanamini/auto-changelog@v4
-        id: changelog
-        with:
-          github-token: ${{ github.token }}
-          commit-types: |
-            feat: New Features
-            fix: Bug Fixes
-            build: Build process updates
-            perf: Performance Improvements
-            docs: Documentation updates
-            test: Tests
-            refactor: Refactors
-            chore: Chores
-            ci: CI
-            style: Code Style
-            revert: Reverts
-          default-commit-type: Other Changes
-      - name: Save changelog
-        run: echo ${{ steps.changelog.outputs.changelog }} > ${{ github.workspace }}-CHANGELOG.txt
+        uses: varrcan/generate-pretty-changelog-action@v1
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
@@ -129,7 +111,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          body_path: "$GITHUB_WORKSPACE"/CHANGELOG.md
           files: |
             checksum.txt
             *.tar.gz
