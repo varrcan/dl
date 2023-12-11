@@ -103,7 +103,7 @@ jobs:
       - checksum
     steps:
       - name: Changelog
-        uses: varrcan/generate-pretty-changelog-action@v1
+        uses: varrcan/generate-pretty-changelog-action@v1.0.0
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
