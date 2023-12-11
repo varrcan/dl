@@ -107,7 +107,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Changelog
-        uses: varrcan/generate-pretty-changelog-action@v1.0.0
+        uses: varrcan/generate-pretty-changelog-action@v1
       - name: Tt
         run: echo "$GITHUB_WORKSPACE"
       - name: Tt2
