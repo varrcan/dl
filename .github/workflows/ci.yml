@@ -102,8 +102,18 @@ jobs:
     needs:
       - checksum
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Changelog
         uses: varrcan/generate-pretty-changelog-action@v1.0.0
+      - name: Tt
+        run: echo "$GITHUB_WORKSPACE"
+      - name: Tt2
+        run: ls -la
+      - name: Tt3
+        run: cd "$GITHUB_WORKSPACE" && ls -la
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
