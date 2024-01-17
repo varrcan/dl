@@ -142,11 +142,20 @@ jobs:
     if: "!contains(github.ref, '-rc')"
     needs:
       - release
+      - prepare
+    strategy:
+      matrix:
+        include:
+          - { os: linux, arch: amd64 }
+          - { os: linux, arch: arm64 }
     steps:
-      - name: Publish AUR package
-        uses: ATiltedTree/create-aur-release@v1
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
         with:
-          package_name: dl-bin
-          commit_username: "dlbot"
-          commit_email: dl@varme.pw
-          ssh_private_key: ${{ secrets.AUR_KEY }}
+          name: deb #TODO
+          path: dist
+      - name: Publish Fury package
+        env:
+          FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
+        run: |
+          bash ./.github/scripts/fury-upload.sh dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.deb
