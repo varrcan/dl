@@ -18,17 +18,24 @@ jobs:
     outputs:
       branch: ${{ steps.branch.outputs.name }}
       version: ${{ steps.version.outputs.tag }}
+      strategy: ${{ steps.set-matrix.outputs.matrix }}
     steps:
+      - name: Setup matrix
+        id: set-matrix
+        run: echo "matrix=[{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"amd64\"}]" >> "$GITHUB_OUTPUT"
       - name: Extract branch name
         id: branch
         run: echo "name=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> "$GITHUB_OUTPUT"
       - name: Extract version
         id: version
         run: echo "tag=${GITHUB_REF#refs/*/}" >> "$GITHUB_OUTPUT"
+
       - name: Show branch
         run: echo ${{ steps.branch.outputs.name }}
       - name: Show version
         run: echo ${{ steps.version.outputs.tag }}
+      - name: Show matrix
+        run: echo ${{ steps.set-matrix.outputs.matrix }}
 
   build:
     runs-on: ${{ matrix.runner }}
@@ -37,11 +44,11 @@ jobs:
       - prepare
     strategy:
       matrix:
-        include:
-#          - { runner: macos-latest,  os: darwin,  arch: amd64 }
-#          - { runner: macos-latest,  os: darwin,  arch: arm64 }
-#          - { runner: ubuntu-latest, os: linux,   arch: amd64 }
-          - { runner: ubuntu-latest, os: linux,   arch: arm64 }
+        cfg:  ${{fromJson(needs.prepare.outputs.strategy)}}
+        # - { runner: macos-latest,  os: darwin,  arch: amd64 }
+        # - { runner: macos-latest,  os: darwin,  arch: arm64 }
+        # - { runner: ubuntu-latest, os: linux,   arch: arm64 }
+        # - { runner: ubuntu-latest, os: linux,   arch: amd64 }
     environment: production
     env:
       CGO: 0
