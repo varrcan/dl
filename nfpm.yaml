@@ -20,7 +20,7 @@ license: "MIT"
 scripts:
   preinstall: "./.github/scripts/packages/preinstall.sh"
 contents:
-  - src: dist/dl
+  - src: bin/dl
     dst: /usr/bin/dl
   - src: config-files/
     dst: /etc/dl/config-files

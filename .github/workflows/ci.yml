@@ -78,7 +78,7 @@ jobs:
           retention-days: 1
 
   packing:
-    name: Packing artifacts
+    name: Packing ${{ matrix.os }}/${{ matrix.arch }}
     runs-on: ubuntu-latest
     needs:
       - build
@@ -105,7 +105,7 @@ jobs:
           retention-days: 1
 
   packages:
-    name: Create packages
+    name: Create ${{ matrix.package }}/${{ matrix.arch }}
     runs-on: ubuntu-latest
     needs:
       - build
@@ -123,7 +123,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: bin
-          path: dist
+          path: bin
       - name: Rename binary
         run: cd "$GITHUB_WORKSPACE"/dist && mv dl-linux-${{ matrix.arch }} dl
       - name: Download nFPM
@@ -140,7 +140,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          path: dist/dl-${{ needs.prepare.outputs.version }}-${{ matrix.arch }}.${PKG_TYPE}
+          path: dist/
           name: releases
           retention-days: 1
 
@@ -157,9 +157,11 @@ jobs:
           name: releases
       - name: Generate checksum
         uses: jmgilman/actions-generate-checksum@v1
-#        with:
-#          patterns: |
-#            *.tar.gz
+        with:
+          patterns: |
+            *.tar.gz
+            *.pkg.tar.zst
+            *.deb
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
