@@ -125,7 +125,7 @@ jobs:
           name: bin
           path: bin
       - name: Rename binary
-        run: cd "$GITHUB_WORKSPACE"/dist && mv dl-linux-${{ matrix.arch }} dl
+        run: cd "$GITHUB_WORKSPACE"/bin && mv dl-linux-${{ matrix.arch }} dl
       - name: Download nFPM
         run: |
           cd "$GITHUB_WORKSPACE" &&
