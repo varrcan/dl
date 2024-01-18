@@ -22,7 +22,7 @@ jobs:
     steps:
       - name: Setup matrix
         id: set-matrix
-        run: echo "matrix=[{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"amd64\"}]" >> "$GITHUB_OUTPUT"
+        run: echo "::set-output name=matrix::[{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"amd64\"}]"
       - name: Extract branch name
         id: branch
         run: echo "name=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> "$GITHUB_OUTPUT"
