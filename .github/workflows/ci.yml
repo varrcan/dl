@@ -70,13 +70,10 @@ jobs:
         run: |
           GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags "-s -w -X 'main.version=${{ needs.prepare.outputs.version }}'" -o "$GITHUB_WORKSPACE"/dist/dl-${{ matrix.os }}-${{ matrix.arch }} .
 
-      - name: Create artifact
-        run: cd "$GITHUB_WORKSPACE"/dist/ && tar -czvf dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz dl
-
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          path: dist/dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          path: dist/dl-${{ matrix.os }}-${{ matrix.arch }}
           name: bin
           retention-days: 1
 
