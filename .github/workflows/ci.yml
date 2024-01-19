@@ -105,7 +105,7 @@ jobs:
           retention-days: 1
 
   packages:
-    name: Create ${{ matrix.package }}-${{ matrix.arch }}.${{ matrix.type }}
+    name: Create ${{ matrix.arch }}.${{ matrix.type }}
     runs-on: ubuntu-latest
     needs:
       - build
@@ -137,11 +137,12 @@ jobs:
           wget https://github.com/goreleaser/nfpm/releases/download/v2.35.2/nfpm_2.35.2_Linux_x86_64.tar.gz &&
           tar -xzvf nfpm_2.35.2_Linux_x86_64.tar.gz
       - name: Create package
+        env:
+          PKG_VERSION: ${{ needs.prepare.outputs.version }}
+          PKG_ARCH: ${{ matrix.arch }}
         run: |
           cd "$GITHUB_WORKSPACE" &&
           mkdir -p dist &&
-          if [ ${{ matrix.package }} == "deb" ]; then PKG_TYPE=deb; else PKG_TYPE=pkg.tar.zst; fi
-          PKG_VERSION=${{ needs.prepare.outputs.version }} PKG_ARCH=${{ matrix.arch }}
           ./nfpm package -p ${{ matrix.package }} -t dist/dl-${{ needs.prepare.outputs.version }}-linux-${{ matrix.arch }}.${{ matrix.type }}
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -218,9 +219,9 @@ jobs:
           ssh_private_key: ${{ secrets.AUR_KEY }}
 
   fury-publish:
-    name: Fury Publish
+    name: Fury publish ${{ matrix.arch }}.deb
     runs-on: ubuntu-latest
-    if: "!contains(github.ref, '-rc')"
+#    if: "!contains(github.ref, '-rc')"
     needs:
       - release
       - prepare
@@ -233,10 +234,10 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          name: deb #TODO
+          name: releases
           path: dist
       - name: Publish Fury package
         env:
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
         run: |
-          bash ./.github/scripts/fury-upload.sh dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.deb
+          bash ./.github/scripts/fury-upload.sh dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-linux-${{ matrix.arch }}.deb
