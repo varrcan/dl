@@ -46,7 +46,6 @@ jobs:
     strategy:
       matrix:
         include: ${{fromJson(needs.prepare.outputs.strategy)}}
-    environment: production
     env:
       CGO: 0
     steps:
@@ -221,6 +220,7 @@ jobs:
   fury-publish:
     name: Fury publish ${{ matrix.arch }}.deb
     runs-on: ubuntu-latest
+    environment: dev
 #    if: "!contains(github.ref, '-rc')"
     needs:
       - release
@@ -240,4 +240,5 @@ jobs:
         env:
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
         run: |
+#          echo "FURY_TOKEN=${{ secrets.FURY_TOKEN }}" >> $GITHUB_ENV
           bash ./.github/scripts/fury-upload.sh dl-${{ needs.prepare.outputs.version }}-linux-${{ matrix.arch }}.deb
