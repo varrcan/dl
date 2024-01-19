@@ -58,13 +58,13 @@ jobs:
       - run: git fetch --force --tags
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: magnetikonline/action-golang-cache@v4
         with:
           go-version-file: 'go.mod'
 
-#      - name: Set CGO
-#        if: ${{ matrix.os == 'darwin' }}
-#        run: echo "CGO=1" >> $GITHUB_ENV
+      - name: Set CGO
+        if: ${{ matrix.os == 'darwin' }}
+        run: echo "CGO=1" >> $GITHUB_ENV
 
       - name: Build
         run: |
