@@ -78,7 +78,7 @@ jobs:
           retention-days: 1
 
   packing:
-    name: Packing ${{ matrix.os }}/${{ matrix.arch }}
+    name: Packing ${{ matrix.os }}-${{ matrix.arch }}.tar.gz
     runs-on: ubuntu-latest
     needs:
       - build
@@ -114,6 +114,11 @@ jobs:
       matrix:
         package: [deb, archlinux]
         arch: [amd64, arm64]
+        include:
+          - type: pkg.tar.zst
+            package: archlinux
+          - type: deb
+            package: deb
     steps:
       - name: Checkout
         uses: actions/checkout@v3
