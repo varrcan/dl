@@ -22,8 +22,8 @@ jobs:
     steps:
       - name: Setup matrix
         id: set-matrix
-#        run: echo "matrix=[{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"amd64\"}]" >> "$GITHUB_OUTPUT"
-        run: echo "matrix=[{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"amd64\"},{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"arm64\"},{\"runner\":\"macos-latest\",\"os\":\"darwin\",\"arch\":\"amd64\"},{\"runner\":\"macos-latest\",\"os\":\"darwin\",\"arch\":\"arm64\"}]" >> "$GITHUB_OUTPUT"
+#        run: echo "matrix=[{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"amd64\"},{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"arm64\"},{\"runner\":\"macos-latest\",\"os\":\"darwin\",\"arch\":\"amd64\"},{\"runner\":\"macos-latest\",\"os\":\"darwin\",\"arch\":\"arm64\"}]" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=[{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"amd64\"},{\"runner\":\"ubuntu-latest\",\"os\":\"linux\",\"arch\":\"arm64\"}]" >> "$GITHUB_OUTPUT"
       - name: Extract branch name
         id: branch
         run: echo "name=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> "$GITHUB_OUTPUT"
@@ -231,6 +231,8 @@ jobs:
           - { os: linux, arch: amd64 }
           - { os: linux, arch: arm64 }
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
