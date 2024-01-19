@@ -111,13 +111,15 @@ jobs:
       - prepare
     strategy:
       matrix:
-        package: [deb, archlinux]
+        package: [deb, archlinux, rpm]
         arch: [amd64, arm64]
         include:
           - type: pkg.tar.zst
             package: archlinux
           - type: deb
             package: deb
+          - type: rpm
+            package: rpm
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -168,6 +170,7 @@ jobs:
             *.tar.gz
             *.pkg.tar.zst
             *.deb
+            *.rpm
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
@@ -201,10 +204,12 @@ jobs:
             *.tar.gz
             *.pkg.tar.zst
             *.deb
+            *.rpm
 
   aur-publish:
     name: AUR Publish
     runs-on: ubuntu-latest
+    environment: production
     if: "!contains(github.ref, '-rc')"
     needs:
       - release
@@ -218,16 +223,17 @@ jobs:
           ssh_private_key: ${{ secrets.AUR_KEY }}
 
   fury-publish:
-    name: Fury publish ${{ matrix.arch }}.deb
+    name: Fury publish ${{ matrix.arch }}.${{ matrix.type }}
     runs-on: ubuntu-latest
-    environment: dev
-#    if: "!contains(github.ref, '-rc')"
+    environment: production
+    if: "!contains(github.ref, '-rc')"
     needs:
       - release
       - prepare
     strategy:
       matrix:
         arch: [amd64, arm64]
+        type: [deb, rpm]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -240,4 +246,4 @@ jobs:
         env:
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
         run: |
-          bash ./.github/scripts/fury-upload.sh dl-${{ needs.prepare.outputs.version }}-linux-${{ matrix.arch }}.deb
+          bash ./.github/scripts/fury-upload.sh dl-${{ needs.prepare.outputs.version }}-linux-${{ matrix.arch }}.${{ matrix.type }}
