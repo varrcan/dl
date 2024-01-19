@@ -76,7 +76,7 @@ jobs:
           name: bin
           retention-days: 1
 
-  packing:
+  archives:
     name: Packing ${{ matrix.os }}-${{ matrix.arch }}.tar.gz
     runs-on: ubuntu-latest
     needs:
@@ -157,7 +157,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - packages
-      - packing
+      - archives
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v3
@@ -226,7 +226,7 @@ jobs:
     name: Fury publish ${{ matrix.arch }}.${{ matrix.type }}
     runs-on: ubuntu-latest
     environment: production
-    if: "!contains(github.ref, '-rc')"
+#    if: "!contains(github.ref, '-rc')"
     needs:
       - release
       - prepare
