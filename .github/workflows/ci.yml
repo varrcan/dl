@@ -227,9 +227,7 @@ jobs:
       - prepare
     strategy:
       matrix:
-        include:
-          - { os: linux, arch: amd64 }
-          - { os: linux, arch: arm64 }
+        arch: [amd64, arm64]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -242,4 +240,4 @@ jobs:
         env:
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
         run: |
-          bash ./.github/scripts/fury-upload.sh dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-linux-${{ matrix.arch }}.deb
+          bash ./.github/scripts/fury-upload.sh dl-${{ needs.prepare.outputs.version }}-linux-${{ matrix.arch }}.deb
