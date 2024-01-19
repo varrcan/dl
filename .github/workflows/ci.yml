@@ -105,7 +105,7 @@ jobs:
           retention-days: 1
 
   packages:
-    name: Create ${{ matrix.package }}/${{ matrix.arch }}
+    name: Create ${{ matrix.package }}-${{ matrix.arch }}.${{ matrix.type }}
     runs-on: ubuntu-latest
     needs:
       - build
@@ -142,7 +142,7 @@ jobs:
           mkdir -p dist &&
           if [ ${{ matrix.package }} == "deb" ]; then PKG_TYPE=deb; else PKG_TYPE=pkg.tar.zst; fi
           PKG_VERSION=${{ needs.prepare.outputs.version }} PKG_ARCH=${{ matrix.arch }}
-          ./nfpm package -p ${{ matrix.package }} -t dist/dl-${{ needs.prepare.outputs.version }}-linux-${{ matrix.arch }}.${PKG_TYPE}
+          ./nfpm package -p ${{ matrix.package }} -t dist/dl-${{ needs.prepare.outputs.version }}-linux-${{ matrix.arch }}.${{ matrix.type }}
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
