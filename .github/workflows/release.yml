@@ -40,14 +40,14 @@ jobs:
       CGO: 0
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - run: git fetch --force --tags
 
       - name: Install Go
-        uses: magnetikonline/action-golang-cache@v4
+        uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
 
@@ -85,6 +85,7 @@ jobs:
         run: |
           cd "$GITHUB_WORKSPACE"/dist &&
           mv dl-${{ matrix.os }}-${{ matrix.arch }} dl &&
+          chmod a+x dl &&
           tar -czvf dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz dl
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -101,8 +102,8 @@ jobs:
       - prepare
     strategy:
       matrix:
-        package: [deb, archlinux, rpm]
-        arch: [amd64, arm64]
+        package: [ deb, archlinux, rpm ]
+        arch: [ amd64, arm64 ]
         include:
           - type: pkg.tar.zst
             package: archlinux
@@ -112,7 +113,7 @@ jobs:
             package: rpm
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Download artifacts
@@ -120,8 +121,11 @@ jobs:
         with:
           name: bin
           path: bin
-      - name: Rename binary
-        run: cd "$GITHUB_WORKSPACE"/bin && mv dl-linux-${{ matrix.arch }} dl
+      - name: Prepare binary
+        run: |
+          cd "$GITHUB_WORKSPACE"/bin &&
+          mv dl-linux-${{ matrix.arch }} dl &&
+          chmod a+x dl
       - name: Download nFPM
         run: |
           cd "$GITHUB_WORKSPACE" &&
@@ -175,7 +179,7 @@ jobs:
       - checksum
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Changelog
@@ -222,11 +226,11 @@ jobs:
       - prepare
     strategy:
       matrix:
-        arch: [amd64, arm64]
-        type: [deb, rpm]
+        arch: [ amd64, arm64 ]
+        type: [ deb, rpm ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:

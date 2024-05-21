@@ -6,11 +6,11 @@ import (
 	"os/exec"
 
 	"github.com/docker/compose/v2/pkg/progress"
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	dockerClient "github.com/docker/docker/client"
-	"github.com/local-deploy/dl/helper"
 	"github.com/local-deploy/dl/project"
+	"github.com/local-deploy/dl/utils"
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,11 +32,11 @@ func UpDbContainer() error {
 	site := project.Env.GetString("HOST_NAME")
 	var siteDb = site + "_db"
 	containerFilter := filters.NewArgs(filters.Arg("name", siteDb))
-	containerExists, err := cli.ContainerList(ctx, types.ContainerListOptions{Filters: containerFilter})
+	containerExists, err := cli.ContainerList(ctx, container.ListOptions{Filters: containerFilter})
 
 	if len(containerExists) == 0 {
 		logrus.Info("db container not running")
-		bin, option := helper.GetCompose()
+		bin, option := utils.GetCompose()
 		Args := []string{bin}
 		preArgs := []string{"-p", project.Env.GetString("NETWORK_NAME"), "up", "-d", "db"}
 

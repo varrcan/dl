@@ -3,8 +3,8 @@ package command
 import (
 	"context"
 
-	"github.com/compose-spec/compose-go/types"
-	"github.com/local-deploy/dl/helper"
+	"github.com/compose-spec/compose-go/v2/types"
+	"github.com/local-deploy/dl/containers"
 	"github.com/local-deploy/dl/utils"
 	"github.com/local-deploy/dl/utils/docker"
 	"github.com/spf13/cobra"
@@ -35,17 +35,33 @@ func upServiceCommand() *cobra.Command {
 	return cmd
 }
 
+func MapsAppend[T comparable, U any](target map[T]U, source map[T]U) map[T]U {
+	if target == nil {
+		return source
+	}
+	if source == nil {
+		return target
+	}
+	for key, value := range source {
+		if _, ok := target[key]; !ok {
+			target[key] = value
+		}
+	}
+	return target
+}
+
 func upServiceRun(ctx context.Context) error {
-	if !helper.WpdeployCheck() {
+	if !utils.WpdeployCheck() {
 		return nil
 	}
 
 	client, _ := docker.NewClient()
+	checkOldNetwork(ctx, client)
 
 	services := types.Services{}
 	servicesContainers := getServicesContainer()
 	for _, service := range servicesContainers {
-		services = append(services, service)
+		services[service.Name] = service
 	}
 
 	project := &types.Project{
@@ -53,8 +69,8 @@ func upServiceRun(ctx context.Context) error {
 		WorkingDir: "",
 		Services:   services,
 		Networks: map[string]types.NetworkConfig{
-			servicesNetworkName: {
-				Name: servicesNetworkName,
+			containers.ServicesNetworkName: {
+				Name: containers.ServicesNetworkName,
 			},
 		},
 	}

@@ -4,8 +4,6 @@ import (
 	"embed"
 	"os"
 	"path/filepath"
-
-	"github.com/local-deploy/dl/helper"
 )
 
 // Templates directory
@@ -13,22 +11,22 @@ var Templates embed.FS
 
 // CreateTemplates create docker-compose files
 func CreateTemplates(overwrite bool) error {
-	templateDir := helper.TemplateDir()
+	templateDir := TemplateDir()
 
 	// delete existing directory
 	if overwrite {
-		err := helper.RemoveDirectory(templateDir)
+		err := RemovePath(templateDir)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := helper.CreateDirectory(templateDir)
+	err := CreateDirectory(templateDir)
 	if err != nil {
 		return err
 	}
 
-	entries, err := Templates.ReadDir("config-files")
+	entries, err := Templates.ReadDir("templates")
 	if err != nil {
 		return err
 	}
@@ -39,7 +37,7 @@ func CreateTemplates(overwrite bool) error {
 			return err
 		}
 
-		data, err := Templates.ReadFile(filepath.Join("config-files", entry.Name()))
+		data, err := Templates.ReadFile(filepath.Join("templates", entry.Name()))
 		if err != nil {
 			return err
 		}

@@ -11,7 +11,9 @@ import (
 	"github.com/docker/compose/v2/pkg/api"
 	"github.com/docker/compose/v2/pkg/compose"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/sirupsen/logrus"
 )
 
 // NewClient docker client initialization
@@ -34,7 +36,7 @@ func newComposeService() (*command.DockerCli, api.Service, error) {
 		return nil, nil, err
 	}
 
-	return dockerCli, api.NewServiceProxy().WithService(compose.NewComposeService(dockerCli)), err
+	return dockerCli, compose.NewComposeService(dockerCli), err
 }
 
 func newDockerCli() (*command.DockerCli, error) {
@@ -44,7 +46,7 @@ func newDockerCli() (*command.DockerCli, error) {
 	}
 
 	options := flags.NewClientOptions()
-	options.LogLevel = "fatal"
+	options.LogLevel = logrus.GetLevel().String()
 
 	err = dockerCLI.Initialize(options)
 	if err != nil {
@@ -60,7 +62,7 @@ func (cli *Client) IsServiceRunning(ctx context.Context) bool {
 		filters.Arg("name", "traefik"),
 		filters.Arg("label", fmt.Sprintf("%s=%s", api.ProjectLabel, "dl-services")),
 	)
-	traefikExists, _ := cli.DockerCli.Client().ContainerList(ctx, types.ContainerListOptions{Filters: containerFilter})
+	traefikExists, _ := cli.DockerCli.Client().ContainerList(ctx, container.ListOptions{Filters: containerFilter})
 
 	return len(traefikExists) > 0
 }

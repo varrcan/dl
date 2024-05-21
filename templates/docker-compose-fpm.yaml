@@ -1,9 +1,7 @@
-version: "3.8"
-
 services:
   php:
     container_name: ${HOST_NAME}_php
-    image: ${REPO}/local-deploy/php${PHP_VERSION:-7.4-apache}:${PHP_IMAGE_VERSION:-latest}
+    image: ${REPO}/local-deploy/php${PHP_VERSION:-8.2-fpm}:${PHP_IMAGE_VERSION:-latest}
     environment:
       - "DOCUMENT_ROOT=${DOCUMENT_ROOT:-/var/www/html}"
       - "HOST_NAME=${HOST_NAME:-localhost}"
@@ -18,21 +16,40 @@ services:
       - "XDEBUG_PORT=${XDEBUG_PORT:-9003}"
       - "VIRTUAL_HOST=${HOST_NAME:-localhost}"
       - "PHP_MODULES=${PHP_MODULES:-opcache}"
+      - "PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/usr/local/etc/php/conf.custom.d"
       - "ENVIRONMENT=dl"
     volumes:
       - "${PWD}/:/var/www/html/"
+      - "${PHP_INI_SOURCE:-/dev/null}:/usr/local/etc/php/conf.custom.d/custom.ini:ro"
       - "~/.ssh/${SSH_KEY:-id_rsa}:/var/www/.ssh/id_rsa:ro"
       - "~/.ssh/known_hosts:/var/www/.ssh/known_hosts"
+    networks:
+      dl_default: { }
+      default:
+        aliases:
+          - ${NETWORK_NAME}
+
+  nginx:
+    container_name: ${HOST_NAME}_nginx
+    image: nginx:alpine
+    working_dir: ${DOCUMENT_ROOT:-/var/www/html}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.${NETWORK_NAME}.entrypoints=web"
       - "traefik.http.routers.${NETWORK_NAME}.rule=Host(`${HOST_NAME}.localhost`) || HostRegexp(`{subdomain:.*}.${HOST_NAME}.localhost`) || HostRegexp(`${HOST_NAME}.{ip:.*}.nip.io`) || HostRegexp(`{subdomain:.*}.${HOST_NAME}.{ip:.*}.nip.io`)"
-      - "traefik.http.routers.${NETWORK_NAME}.middlewares=site-compress"
       - "traefik.http.routers.${NETWORK_NAME}_ssl.entrypoints=websecure"
       - "traefik.http.routers.${NETWORK_NAME}_ssl.rule=Host(`${HOST_NAME}.localhost`) || HostRegexp(`{subdomain:.*}.${HOST_NAME}.localhost`) || HostRegexp(`${HOST_NAME}.{ip:.*}.nip.io`) || HostRegexp(`{subdomain:.*}.${HOST_NAME}.{ip:.*}.nip.io`)"
-      - "traefik.http.routers.${NETWORK_NAME}_ssl.middlewares=site-compress"
       - "traefik.http.routers.${NETWORK_NAME}_ssl.tls=true"
       - "traefik.docker.network=dl_default"
+    environment:
+      - "VIRTUAL_HOST=\"${NIP_DOMAIN} ${LOCAL_DOMAIN}\""
+      - "HOST_NAME=${HOST_NAME}"
+      - "DOCUMENT_ROOT=${DOCUMENT_ROOT:-/var/www/html}"
+    volumes:
+      - "${PWD}/:/var/www/html/"
+      - "${NGINX_CONF}:/etc/nginx/templates/default.conf.template"
+    depends_on:
+      - php
     networks:
       dl_default: { }
       default:

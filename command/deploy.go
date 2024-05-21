@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -53,7 +54,7 @@ Laravel: only the database is downloaded`,
 
 func deployRun() error {
 	ctx := context.Background()
-	err := deployService(ctx)
+	err := progress.RunWithTitle(ctx, deployService, os.Stdout, "Deploy")
 	if err != nil {
 		fmt.Println("Something went wrong...")
 		return nil
@@ -156,11 +157,12 @@ func startFiles(ctx context.Context, c *client.Client) {
 
 func startDump(ctx context.Context, c *client.Client) {
 	defer pullWaitGroup.Done()
-	project.DumpDb(ctx, c, tables)
+	project.DumpDB(ctx, c, tables)
 }
 
 func detectFw() (string, error) {
 	ls := strings.Join([]string{"cd", sshClient.Config.Catalog, "&&", "ls"}, " ")
+	logrus.Infof("Run command: %s", ls)
 	out, err := sshClient.Run(ls)
 	if err != nil {
 		return "", err
@@ -181,6 +183,8 @@ func detectFw() (string, error) {
 		fmt.Println("Laravel FW detected")
 		return "laravel", nil
 	}
+
+	logrus.Errorf("Output of ls: %s", string(out))
 
 	return "", errors.New("failed determine the Framework, please specify accesses manually https://clck.ru/uAGwX")
 }

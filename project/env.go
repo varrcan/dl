@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/local-deploy/dl/helper"
+	"github.com/local-deploy/dl/utils"
 	"github.com/pterm/pterm"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -28,6 +28,8 @@ var phpImagesVersion = map[string]string{
 	"8.1-fpm":    "1.0.5",
 	"8.2-apache": "1.0.3",
 	"8.2-fpm":    "1.0.3",
+	"8.3-apache": "1.0.0",
+	"8.3-fpm":    "1.0.0",
 }
 
 // LoadEnv Get variables from .env file
@@ -57,7 +59,7 @@ func LoadEnv() {
 // setNetworkName Set network name from project name
 func setDefaultEnv() {
 	dir, _ := os.Getwd()
-	home, _ := helper.HomeDir()
+	home, _ := utils.HomeDir()
 	Env.SetDefault("HOST_NAME", filepath.Base(dir))
 	Env.SetDefault("PWD", dir)
 	Env.SetDefault("HOME", home)
@@ -73,7 +75,7 @@ func setDefaultEnv() {
 	res := re.ReplaceAllString(projectName, "")
 	Env.SetDefault("NETWORK_NAME", res)
 
-	confDir := helper.TemplateDir()
+	confDir := utils.TemplateDir()
 	Env.SetDefault("NGINX_CONF", filepath.Join(confDir, "default.conf.template"))
 
 	customConfig := Env.GetString("NGINX_CONF")
@@ -105,10 +107,11 @@ func setDefaultEnv() {
 // setComposeFile Set docker-compose files
 func setComposeFiles() {
 	var files []string
-	templateDir := helper.TemplateDir()
+	templateDir := utils.TemplateDir()
 
 	images := map[string]string{
 		"mysql":     templateDir + "/docker-compose-mysql.yaml",
+		"mariadb":   templateDir + "/docker-compose-mariadb.yaml",
 		"pgsql":     templateDir + "/docker-compose-pgsql.yaml",
 		"fpm":       templateDir + "/docker-compose-fpm.yaml",
 		"apache":    templateDir + "/docker-compose-apache.yaml",
@@ -128,6 +131,9 @@ func setComposeFiles() {
 
 	if Env.GetFloat64("MYSQL_VERSION") > 0 {
 		files = append(files, images["mysql"])
+	}
+	if Env.GetFloat64("MARIADB_VERSION") > 0 {
+		files = append(files, images["mariadb"])
 	}
 	if Env.GetFloat64("POSTGRES_VERSION") > 0 {
 		files = append(files, images["pgsql"])

@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/docker/compose/v2/pkg/progress"
-	"github.com/local-deploy/dl/helper"
+	"github.com/local-deploy/dl/utils"
 	"github.com/local-deploy/dl/utils/client"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/text/cases"
@@ -24,7 +24,7 @@ func CopyFiles(ctx context.Context, client *client.Client, override []string) {
 		path string
 	)
 
-	c := &SshClient{client}
+	c := &SSHClient{client}
 
 	w := progress.ContextWriter(ctx)
 	w.Event(progress.Event{ID: "Files", Status: progress.Working})
@@ -52,13 +52,13 @@ func CopyFiles(ctx context.Context, client *client.Client, override []string) {
 
 	err = c.downloadArchive(ctx)
 	if err != nil {
-		w.Event(progress.Event{ID: "Files", Status: progress.Error})
+		w.Event(progress.ErrorMessageEvent("Files", fmt.Sprint(err)))
 		return
 	}
 
 	err = ExtractArchive(ctx, path)
 	if err != nil {
-		w.Event(progress.Event{ID: "Files", Status: progress.Error})
+		w.Event(progress.ErrorMessageEvent("Files", fmt.Sprint(err)))
 		return
 	}
 
@@ -72,10 +72,9 @@ func CopyFiles(ctx context.Context, client *client.Client, override []string) {
 }
 
 // packFiles Add files to archive
-func (c SshClient) packFiles(ctx context.Context, path string) error {
+func (c SSHClient) packFiles(ctx context.Context, path string) error {
 	w := progress.ContextWriter(ctx)
-
-	w.Event(progress.Event{ID: "Archive files", ParentID: "Files", Status: progress.Working})
+	w.Event(progress.Event{ID: "Files", StatusText: "Creating archive"})
 
 	excludeTarString := FormatIgnoredPath()
 	tarCmd := strings.Join([]string{"cd", c.Config.Catalog, "&&",
@@ -92,8 +91,6 @@ func (c SshClient) packFiles(ctx context.Context, path string) error {
 	if err != nil {
 		return err
 	}
-
-	w.Event(progress.Event{ID: "Archive files", ParentID: "Files", Status: progress.Done})
 
 	return nil
 }
@@ -116,30 +113,27 @@ func FormatIgnoredPath() string {
 	return strings.Join(ignoredPath, " ")
 }
 
-func (c SshClient) downloadArchive(ctx context.Context) error {
+func (c SSHClient) downloadArchive(ctx context.Context) error {
 	w := progress.ContextWriter(ctx)
+	w.Event(progress.Event{ID: "Files", StatusText: "Download archive"})
 
 	serverPath := filepath.Join(c.Config.Catalog, "production.tar.gz")
 	localPath := filepath.Join(Env.GetString("PWD"), "production.tar.gz")
-
-	w.Event(progress.Event{ID: "Download archive", ParentID: "Files", Status: progress.Working})
 
 	logrus.Infof("Download archive: %s", serverPath)
 	err := c.Download(ctx, serverPath, localPath)
 
 	if err != nil {
-		w.Event(progress.ErrorMessageEvent("Download error", fmt.Sprint(err)))
+		w.Event(progress.ErrorMessageEvent("Files", fmt.Sprint(err)))
 		return err
 	}
 
 	logrus.Infof("Delete archive: %s", serverPath)
 	err = c.CleanRemote(serverPath)
 	if err != nil {
-		w.Event(progress.ErrorMessageEvent("File deletion error", fmt.Sprint(err)))
+		w.Event(progress.ErrorMessageEvent("Files", fmt.Sprint(err)))
 		return err
 	}
-
-	w.Event(progress.Event{ID: "Download archive", ParentID: "Files", Status: progress.Done})
 
 	return err
 }
@@ -148,8 +142,7 @@ func (c SshClient) downloadArchive(ctx context.Context) error {
 func ExtractArchive(ctx context.Context, path string) error {
 	var err error
 	w := progress.ContextWriter(ctx)
-
-	w.Event(progress.Event{ID: "Extract archive", ParentID: "Files", Status: progress.Working})
+	w.Event(progress.Event{ID: "Files", StatusText: "Extract archive"})
 
 	localPath := Env.GetString("PWD")
 	backPath := Env.GetString("BACKEND_ROOT")
@@ -163,7 +156,7 @@ func ExtractArchive(ctx context.Context, path string) error {
 	_, err = os.Stat(destinationPath)
 	if err != nil {
 		if err := os.MkdirAll(destinationPath, 0o775); err != nil {
-			w.Event(progress.ErrorMessageEvent("Extract archive", fmt.Sprint(err)))
+			w.Event(progress.ErrorMessageEvent("Files", fmt.Sprint(err)))
 			return err
 		}
 	}
@@ -171,14 +164,14 @@ func ExtractArchive(ctx context.Context, path string) error {
 	// TODO: rewrite to Go
 	outTar, err := exec.Command("tar", "-xzf", archive, "-C", destinationPath).CombinedOutput()
 	if err != nil {
-		w.Event(progress.ErrorMessageEvent("Extract archive", fmt.Sprint(string(outTar))))
+		w.Event(progress.ErrorMessageEvent("Files", fmt.Sprint(string(outTar))))
 		return err
 	}
 
 	logrus.Infof("Delete archive path: %s", archive)
 	outRm, err := exec.Command("rm", "-f", archive).CombinedOutput()
 	if err != nil {
-		w.Event(progress.ErrorMessageEvent("Extract archive", fmt.Sprint(string(outRm))))
+		w.Event(progress.ErrorMessageEvent("Files", fmt.Sprint(string(outRm))))
 		return err
 	}
 
@@ -186,14 +179,13 @@ func ExtractArchive(ctx context.Context, path string) error {
 	for _, dir := range s {
 		logrus.Infof("Run chmod 775: %s", dir)
 		chmodDir := filepath.Join(destinationPath, dir)
-		err = helper.ChmodR(chmodDir, 0775)
+		err = utils.ChmodR(chmodDir, 0775)
 		if err != nil {
-			w.Event(progress.ErrorMessageEvent("Extract archive", fmt.Sprint(err)))
+			w.Event(progress.ErrorMessageEvent("Files", fmt.Sprint(err)))
 			return err
 		}
 	}
 
-	w.Event(progress.Event{ID: "Extract archive", ParentID: "Files", Status: progress.Done})
 	return nil
 }
 
