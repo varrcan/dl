@@ -216,12 +216,12 @@ jobs:
       - name: Publish AUR package
         uses: varabyte/update-aur-package@v1.0.4
         with:
-          version: ${{ needs.prepare.outputs.version }}
+          version: 1.0.4-1
           package_name: dl-bin
           commit_username: "dlbot"
           commit_email: dl@varme.pw
           ssh_private_key: ${{ secrets.AUR_KEY }}
-          dry_run: "contains(github.ref, '-rc')"
+          dry_run: true
 
   fury-publish:
     name: Fury publish ${{ matrix.arch }}.${{ matrix.type }}
