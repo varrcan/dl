@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: dist/dl-${{ matrix.os }}-${{ matrix.arch }}
-          name: bin
+          name: dl-${{ matrix.os }}-${{ matrix.arch }}
           retention-days: 1
 
   archives:
@@ -79,8 +79,9 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: bin
+          pattern: dl-*
           path: dist
+          merge-multiple: true
       - name: Create archives
         run: |
           cd "$GITHUB_WORKSPACE"/dist &&
@@ -91,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: dist/dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
-          name: releases
+          name: releases-${{ matrix.os }}-${{ matrix.arch }}
           retention-days: 1
 
   packages:
@@ -119,8 +120,9 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: bin
+          pattern: dl-*
           path: bin
+          merge-multiple: true
       - name: Prepare binary
         run: |
           cd "$GITHUB_WORKSPACE"/bin &&
@@ -143,7 +145,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: dist/
-          name: releases
+          name: releases-${{ matrix.arch }}.${{ matrix.type }}
           retention-days: 1
 
   checksum:
@@ -156,7 +158,8 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: releases
+          pattern: releases-*
+          merge-multiple: true
       - name: Generate checksum
         uses: jmgilman/actions-generate-checksum@v1
         with:
@@ -168,7 +171,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: releases
+          name: releases-checksum
           path: checksum.txt
           retention-days: 1
 
@@ -187,7 +190,8 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: releases
+          pattern: releases-*
+          merge-multiple: true
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
@@ -237,8 +241,9 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          name: releases
+          pattern: releases-*
           path: dist
+          merge-multiple: true
       - name: Publish Fury package
         env:
           FURY_TOKEN: ${{ secrets.FURY_TOKEN }}
