@@ -214,14 +214,13 @@ jobs:
       - prepare
     steps:
       - name: Publish AUR package
-        uses: varabyte/update-aur-package@v1.0.4
+        uses: glitchcrab/action-build-aur-package@main
         with:
-          version: 1.0.4-1
-          package_name: dl-bin
-          commit_username: "dlbot"
-          commit_email: dl@varme.pw
-          ssh_private_key: ${{ secrets.AUR_KEY }}
-          dry_run: true
+          pushToAur: "!contains(github.ref, '-rc')"
+        env:
+          AUR_SSH_KEY: ${{ secrets.AUR_KEY }}
+          GIT_EMAIL: dl@varme.pw
+          GIT_USER: "dlbot"
 
   fury-publish:
     name: Fury publish ${{ matrix.arch }}.${{ matrix.type }}
