@@ -47,7 +47,7 @@ jobs:
       - run: git fetch --force --tags
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
 
@@ -60,7 +60,7 @@ jobs:
           GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} CGO_ENABLED=${{ env.CGO }} go build -ldflags "-s -w -X 'main.version=${{ needs.prepare.outputs.version }}'" -o "$GITHUB_WORKSPACE"/dist/dl-${{ matrix.os }}-${{ matrix.arch }} .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: dist/dl-${{ matrix.os }}-${{ matrix.arch }}
           name: bin
@@ -77,7 +77,7 @@ jobs:
         include: ${{fromJson(needs.prepare.outputs.strategy)}}
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bin
           path: dist
@@ -88,7 +88,7 @@ jobs:
           chmod a+x dl &&
           tar -czvf dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz dl
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: dist/dl-${{ needs.prepare.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
           name: releases
@@ -117,7 +117,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: bin
           path: bin
@@ -140,7 +140,7 @@ jobs:
           mkdir -p dist &&
           ./nfpm package -p ${{ matrix.package }} -t dist/dl-${{ needs.prepare.outputs.version }}-linux-${{ matrix.arch }}.${{ matrix.type }}
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: dist/
           name: releases
@@ -154,7 +154,7 @@ jobs:
       - archives
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: releases
       - name: Generate checksum
@@ -166,7 +166,7 @@ jobs:
             *.deb
             *.rpm
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: releases
           path: checksum.txt
@@ -185,11 +185,11 @@ jobs:
       - name: Changelog
         uses: varrcan/generate-pretty-changelog-action@v1
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: releases
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ contains(github.ref, '-rc') }}
           body_path: ${{ github.workspace }}/CHANGELOG.md
@@ -204,17 +204,20 @@ jobs:
     name: AUR Publish
     runs-on: ubuntu-latest
     environment: production
-    if: "!contains(github.ref, '-rc')"
     needs:
       - release
+      - prepare
     steps:
       - name: Publish AUR package
-        uses: ATiltedTree/create-aur-release@v1
+        uses: varabyte/update-aur-package@v1.0.5
         with:
+          version: ${{ needs.prepare.outputs.version }}
           package_name: dl-bin
           commit_username: "dlbot"
           commit_email: dl@varme.pw
           ssh_private_key: ${{ secrets.AUR_KEY }}
+          if: "!contains(github.ref, '-rc')"
+          dry_run: true
 
   fury-publish:
     name: Fury publish ${{ matrix.arch }}.${{ matrix.type }}
@@ -232,7 +235,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: releases
           path: dist
